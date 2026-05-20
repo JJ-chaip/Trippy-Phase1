@@ -11,6 +11,10 @@ import {
   PRESET_COSMIC_BLOOM,
   PRESET_NEON_PULSE,
   PRESET_DEEP_OCEAN,
+  PRESET_SOLAR_FLARE,
+  PRESET_AURORA,
+  PRESET_CYBERPUNK,
+  PRESET_VOID,
 } from '../src/render/presets.js';
 import type { VisualPreset } from '../src/render/presets.js';
 
@@ -88,14 +92,18 @@ describe('preset collection', () => {
     expect(ALL_PRESETS).toContain(DEFAULT_PRESET);
   });
 
-  it('DEFAULT_PRESET is Cosmic Bloom', () => {
-    expect(DEFAULT_PRESET).toBe(PRESET_COSMIC_BLOOM);
+  it('DEFAULT_PRESET is Solar Flare', () => {
+    expect(DEFAULT_PRESET).toBe(PRESET_SOLAR_FLARE);
   });
 
-  it('contains all three named presets', () => {
+  it('contains all named presets', () => {
     expect(ALL_PRESETS).toContain(PRESET_COSMIC_BLOOM);
     expect(ALL_PRESETS).toContain(PRESET_NEON_PULSE);
     expect(ALL_PRESETS).toContain(PRESET_DEEP_OCEAN);
+    expect(ALL_PRESETS).toContain(PRESET_SOLAR_FLARE);
+    expect(ALL_PRESETS).toContain(PRESET_AURORA);
+    expect(ALL_PRESETS).toContain(PRESET_CYBERPUNK);
+    expect(ALL_PRESETS).toContain(PRESET_VOID);
   });
 });
 

@@ -61,6 +61,50 @@ export interface VisualPreset {
 
   /** Central pulse intensity. */
   readonly pulseIntensity: number;
+
+  /** Trail persistence (0 = no trails, 1 = full persistence). */
+  readonly trailAlpha?: number;
+
+  /** Number of bloom glow passes (0 = disabled). */
+  readonly bloomPasses?: number;
+
+  /** Number of starburst rays from center (0 = disabled). */
+  readonly starburstRays?: number;
+
+  /** Scale multiplier on beat detection pulse (1 = normal). */
+  readonly beatPulseScale?: number;
+
+  /** Chromatic shift amount on high energy (0 = none). */
+  readonly chromaShift?: number;
+
+  /** Inner glow radius as fraction of minDim. */
+  readonly innerGlowRadius?: number;
+
+  // ─── Visual Layer Toggles ───────────────────────────────
+  // Each toggle independently enables/disables one visual effect.
+
+  /** Trail afterimage — ghostly persistence of previous frames. */
+  readonly layerTrails?: boolean;
+  /** Bloom glow — soft radial light pulses on beat. */
+  readonly layerBloom?: boolean;
+  /** Starburst rays — lines radiating from center on beat hits. */
+  readonly layerStarburst?: boolean;
+  /** Chromatic aberration — RGB colour-split shift on high energy. */
+  readonly layerChroma?: boolean;
+  /** Floating particles — drifting dots that react to audio energy. */
+  readonly layerParticles?: boolean;
+  /** Inner glow — pulsing light core at the centre. */
+  readonly layerInnerGlow?: boolean;
+  /** Frequency rings — waveform-distorted circles driven by audio bands. */
+  readonly layerRings?: boolean;
+  /** Ring fill — semi-transparent colour inside each ring. */
+  readonly layerFill?: boolean;
+  /** Mirror mode — reflected duplicate of each ring pattern. */
+  readonly layerMirror?: boolean;
+  /** Central pulse — energy-reactive core disc. */
+  readonly layerPulse?: boolean;
+  /** Outer vignette — dark edges framing the visual. */
+  readonly layerVignette?: boolean;
 }
 
 export const PRESET_COSMIC_BLOOM: VisualPreset = {
@@ -84,6 +128,23 @@ export const PRESET_COSMIC_BLOOM: VisualPreset = {
   segments: 128,
   waveDistortion: 0.4,
   pulseIntensity: 0.6,
+  trailAlpha: 0.12,
+  bloomPasses: 2,
+  starburstRays: 0,
+  beatPulseScale: 1.4,
+  chromaShift: 0.3,
+  innerGlowRadius: 0.15,
+  layerTrails: true,
+  layerBloom: true,
+  layerStarburst: false,
+  layerChroma: true,
+  layerParticles: true,
+  layerInnerGlow: true,
+  layerRings: true,
+  layerFill: true,
+  layerMirror: false,
+  layerPulse: true,
+  layerVignette: true,
 };
 
 export const PRESET_NEON_PULSE: VisualPreset = {
@@ -107,6 +168,23 @@ export const PRESET_NEON_PULSE: VisualPreset = {
   segments: 96,
   waveDistortion: 0.6,
   pulseIntensity: 0.8,
+  trailAlpha: 0.08,
+  bloomPasses: 3,
+  starburstRays: 12,
+  beatPulseScale: 1.6,
+  chromaShift: 0.5,
+  innerGlowRadius: 0.18,
+  layerTrails: true,
+  layerBloom: true,
+  layerStarburst: true,
+  layerChroma: true,
+  layerParticles: true,
+  layerInnerGlow: true,
+  layerRings: true,
+  layerFill: true,
+  layerMirror: true,
+  layerPulse: true,
+  layerVignette: true,
 };
 
 export const PRESET_DEEP_OCEAN: VisualPreset = {
@@ -130,6 +208,183 @@ export const PRESET_DEEP_OCEAN: VisualPreset = {
   segments: 160,
   waveDistortion: 0.3,
   pulseIntensity: 0.4,
+  trailAlpha: 0.18,
+  bloomPasses: 1,
+  starburstRays: 0,
+  beatPulseScale: 1.2,
+  chromaShift: 0.1,
+  innerGlowRadius: 0.12,
+  layerTrails: true,
+  layerBloom: true,
+  layerStarburst: false,
+  layerChroma: true,
+  layerParticles: true,
+  layerInnerGlow: true,
+  layerRings: true,
+  layerFill: true,
+  layerMirror: false,
+  layerPulse: true,
+  layerVignette: true,
+};
+
+export const PRESET_SOLAR_FLARE: VisualPreset = {
+  id: 'solar-flare',
+  name: 'Solar Flare',
+  description: 'Explosive warm energy bursts with starburst rays and heavy beat response',
+  bgColor: '#0a0200',
+  ringCount: 7,
+  baseHue: 20,
+  hueSpread: 40,
+  hueRotate: true,
+  hueRotateSpeed: 30,
+  baseRadiusFraction: 0.09,
+  reactivity: 3.5,
+  particleCount: 200,
+  glowIntensity: 1.0,
+  mirror: false,
+  lineWidth: 2.8,
+  fillAlpha: 0.1,
+  rotationSpeed: 0.25,
+  segments: 96,
+  waveDistortion: 0.7,
+  pulseIntensity: 1.0,
+  trailAlpha: 0.06,
+  bloomPasses: 3,
+  starburstRays: 16,
+  beatPulseScale: 2.0,
+  chromaShift: 0.6,
+  innerGlowRadius: 0.22,
+  layerTrails: true,
+  layerBloom: true,
+  layerStarburst: true,
+  layerChroma: true,
+  layerParticles: true,
+  layerInnerGlow: true,
+  layerRings: true,
+  layerFill: true,
+  layerMirror: false,
+  layerPulse: true,
+  layerVignette: true,
+};
+
+export const PRESET_AURORA: VisualPreset = {
+  id: 'aurora',
+  name: 'Aurora Borealis',
+  description: 'Ethereal curtains of shifting green-violet light with gentle flow',
+  bgColor: '#010208',
+  ringCount: 12,
+  baseHue: 120,
+  hueSpread: 60,
+  hueRotate: true,
+  hueRotateSpeed: 8,
+  baseRadiusFraction: 0.05,
+  reactivity: 2.0,
+  particleCount: 150,
+  glowIntensity: 0.7,
+  mirror: true,
+  lineWidth: 1.8,
+  fillAlpha: 0.12,
+  rotationSpeed: 0.05,
+  segments: 192,
+  waveDistortion: 0.5,
+  pulseIntensity: 0.3,
+  trailAlpha: 0.25,
+  bloomPasses: 2,
+  starburstRays: 0,
+  beatPulseScale: 1.1,
+  chromaShift: 0.2,
+  innerGlowRadius: 0.1,
+  layerTrails: true,
+  layerBloom: true,
+  layerStarburst: false,
+  layerChroma: true,
+  layerParticles: true,
+  layerInnerGlow: true,
+  layerRings: true,
+  layerFill: true,
+  layerMirror: true,
+  layerPulse: true,
+  layerVignette: true,
+};
+
+export const PRESET_CYBERPUNK: VisualPreset = {
+  id: 'cyberpunk',
+  name: 'Cyberpunk',
+  description: 'Hard-edged magenta-cyan geometry with aggressive beat response',
+  bgColor: '#030006',
+  ringCount: 5,
+  baseHue: 300,
+  hueSpread: 70,
+  hueRotate: true,
+  hueRotateSpeed: 40,
+  baseRadiusFraction: 0.12,
+  reactivity: 4.0,
+  particleCount: 90,
+  glowIntensity: 1.0,
+  mirror: true,
+  lineWidth: 3.5,
+  fillAlpha: 0.03,
+  rotationSpeed: -0.35,
+  segments: 64,
+  waveDistortion: 0.8,
+  pulseIntensity: 0.9,
+  trailAlpha: 0.04,
+  bloomPasses: 3,
+  starburstRays: 8,
+  beatPulseScale: 2.2,
+  chromaShift: 0.8,
+  innerGlowRadius: 0.2,
+  layerTrails: true,
+  layerBloom: true,
+  layerStarburst: true,
+  layerChroma: true,
+  layerParticles: true,
+  layerInnerGlow: true,
+  layerRings: true,
+  layerFill: true,
+  layerMirror: true,
+  layerPulse: true,
+  layerVignette: true,
+};
+
+export const PRESET_VOID: VisualPreset = {
+  id: 'void',
+  name: 'The Void',
+  description: 'Minimal monochrome with extreme subtlety — silence made visible',
+  bgColor: '#000000',
+  ringCount: 4,
+  baseHue: 0,
+  hueSpread: 0,
+  hueRotate: false,
+  hueRotateSpeed: 0,
+  baseRadiusFraction: 0.15,
+  reactivity: 5.0,
+  particleCount: 30,
+  glowIntensity: 0.3,
+  mirror: false,
+  lineWidth: 1,
+  fillAlpha: 0.02,
+  rotationSpeed: 0.02,
+  segments: 256,
+  waveDistortion: 0.2,
+  pulseIntensity: 0.5,
+  trailAlpha: 0.35,
+  bloomPasses: 1,
+  starburstRays: 0,
+  beatPulseScale: 1.8,
+  chromaShift: 0,
+  innerGlowRadius: 0.08,
+  layerTrails: true,
+  layerBloom: true,
+  layerStarburst: false,
+  layerChroma: false,
+  layerParticles: true,
+  layerInnerGlow: true,
+  layerRings: true,
+  layerFill: true,
+  layerMirror: false,
+  layerPulse: true,
+  layerVignette: true,
 };
 
 /** All available presets. New presets are added here. */
@@ -137,7 +392,11 @@ export const ALL_PRESETS: readonly VisualPreset[] = [
   PRESET_COSMIC_BLOOM,
   PRESET_NEON_PULSE,
   PRESET_DEEP_OCEAN,
+  PRESET_SOLAR_FLARE,
+  PRESET_AURORA,
+  PRESET_CYBERPUNK,
+  PRESET_VOID,
 ];
 
 /** Default preset shown on startup. */
-export const DEFAULT_PRESET = PRESET_COSMIC_BLOOM;
+export const DEFAULT_PRESET = PRESET_SOLAR_FLARE;
