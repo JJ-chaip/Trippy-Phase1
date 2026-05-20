@@ -139,6 +139,17 @@ export function getInterpolatedPreset(store: PresetStoreState): VisualPreset {
     beatPulseScale: lerp(a.beatPulseScale ?? 1, b.beatPulseScale ?? 1, t),
     chromaShift: lerp(a.chromaShift ?? 0, b.chromaShift ?? 0, t),
     innerGlowRadius: lerp(a.innerGlowRadius ?? 0.15, b.innerGlowRadius ?? 0.15, t),
+    layerTrails: t > 0.5 ? b.layerTrails : a.layerTrails,
+    layerBloom: t > 0.5 ? b.layerBloom : a.layerBloom,
+    layerStarburst: t > 0.5 ? b.layerStarburst : a.layerStarburst,
+    layerChroma: t > 0.5 ? b.layerChroma : a.layerChroma,
+    layerParticles: t > 0.5 ? b.layerParticles : a.layerParticles,
+    layerInnerGlow: t > 0.5 ? b.layerInnerGlow : a.layerInnerGlow,
+    layerRings: t > 0.5 ? b.layerRings : a.layerRings,
+    layerFill: t > 0.5 ? b.layerFill : a.layerFill,
+    layerMirror: t > 0.5 ? b.layerMirror : a.layerMirror,
+    layerPulse: t > 0.5 ? b.layerPulse : a.layerPulse,
+    layerVignette: t > 0.5 ? b.layerVignette : a.layerVignette,
   };
 }
 

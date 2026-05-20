@@ -125,7 +125,8 @@ export function renderFrame(
   state.chromaAmount += (targetChroma - state.chromaAmount) * clamp(dtSec * 6, 0, 1);
 
   const trailAlpha = preset.trailAlpha ?? 0;
-  const useTrails = trailAlpha > 0 && (quality?.trailsEnabled ?? true);
+  const trailsLayerOn = (preset.layerTrails ?? true) && (quality?.trailsEnabled ?? true);
+  const useTrails = trailAlpha > 0 && trailsLayerOn;
 
   // -- Background --
   if (useTrails) {
@@ -152,18 +153,20 @@ export function renderFrame(
   ctx.fillRect(0, 0, w, h);
 
   // -- Inner glow --
-  const innerR = minDim * (preset.innerGlowRadius ?? 0.15);
-  const innerGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, innerR * (1 + state.beatPulse * 0.5));
-  innerGrad.addColorStop(0, `hsla(${hueBase}, 100%, 70%, ${0.15 + state.beatPulse * 0.3})`);
-  innerGrad.addColorStop(0.5, `hsla(${(hueBase + 30) % 360}, 80%, 40%, ${0.08 + state.beatPulse * 0.15})`);
-  innerGrad.addColorStop(1, 'transparent');
-  ctx.fillStyle = innerGrad;
-  ctx.beginPath();
-  ctx.arc(cx, cy, innerR * (1 + state.beatPulse * 0.5), 0, Math.PI * 2);
-  ctx.fill();
+  if (preset.layerInnerGlow ?? true) {
+    const innerR = minDim * (preset.innerGlowRadius ?? 0.15);
+    const innerGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, innerR * (1 + state.beatPulse * 0.5));
+    innerGrad.addColorStop(0, `hsla(${hueBase}, 100%, 70%, ${0.15 + state.beatPulse * 0.3})`);
+    innerGrad.addColorStop(0.5, `hsla(${(hueBase + 30) % 360}, 80%, 40%, ${0.08 + state.beatPulse * 0.15})`);
+    innerGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = innerGrad;
+    ctx.beginPath();
+    ctx.arc(cx, cy, innerR * (1 + state.beatPulse * 0.5), 0, Math.PI * 2);
+    ctx.fill();
+  }
 
   // -- Central pulse --
-  if (preset.pulseIntensity > 0) {
+  if (preset.pulseIntensity > 0 && (preset.layerPulse ?? true)) {
     const pulseR = minDim * 0.03 + minDim * 0.12 * peak * preset.pulseIntensity * (1 + state.beatPulse * 0.4);
     const pulseGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, pulseR);
     pulseGrad.addColorStop(0, `hsla(${hueBase}, 100%, 80%, ${0.6 * peak})`);
@@ -177,15 +180,17 @@ export function renderFrame(
 
   // -- Starburst rays --
   const starburstRays = preset.starburstRays ?? 0;
-  const starburstEnabled = quality?.starburstEnabled ?? true;
-  if (starburstRays > 0 && state.starburstAlpha > 0.01 && starburstEnabled) {
+  const starburstLayerOn = (preset.layerStarburst ?? true) && (quality?.starburstEnabled ?? true);
+  if (starburstRays > 0 && state.starburstAlpha > 0.01 && starburstLayerOn) {
     drawStarburst(ctx, cx, cy, minDim, hueBase, starburstRays, state.starburstAlpha, t);
   }
 
   // -- Frequency rings --
+  const ringsLayerOn = preset.layerRings ?? true;
   const glowQuality = quality?.glowQuality ?? 1;
   const segMultiplier = quality?.segmentMultiplier ?? 1;
 
+  if (ringsLayerOn) {
   ctx.save();
   ctx.translate(cx, cy);
   ctx.rotate(t * preset.rotationSpeed);
@@ -233,13 +238,13 @@ export function renderFrame(
     ctx.stroke();
 
     // Fill
-    if (preset.fillAlpha > 0) {
+    if (preset.fillAlpha > 0 && (preset.layerFill ?? true)) {
       ctx.fillStyle = `hsla(${ringHue}, ${saturation}%, ${lightness}%, ${preset.fillAlpha * bandEnergy})`;
       ctx.fill();
     }
 
     // Mirror mode
-    if (preset.mirror) {
+    if (preset.mirror && (preset.layerMirror ?? true)) {
       ctx.beginPath();
       for (let s = 0; s <= effectiveSegments; s++) {
         const angle = (s / effectiveSegments) * Math.PI * 2;
@@ -261,6 +266,7 @@ export function renderFrame(
   }
 
   ctx.restore();
+  } // end ringsLayerOn
 
   // Reset shadow
   ctx.shadowColor = 'transparent';
@@ -269,29 +275,33 @@ export function renderFrame(
   // -- Bloom simulation --
   const maxBloom = quality?.maxBloomPasses ?? 3;
   const bloomPasses = Math.min(preset.bloomPasses ?? 0, maxBloom);
-  if (bloomPasses > 0 && peak > 0.15) {
+  const bloomLayerOn = preset.layerBloom ?? true;
+  if (bloomPasses > 0 && peak > 0.15 && bloomLayerOn) {
     drawBloom(ctx, w, h, cx, cy, minDim, hueBase, peak, bloomPasses, state.beatPulse);
   }
 
   // -- Chromatic aberration --
-  const chromaEnabled = quality?.chromaEnabled ?? true;
-  if (state.chromaAmount > 0.01 && chromaEnabled) {
+  const chromaLayerOn = (preset.layerChroma ?? true) && (quality?.chromaEnabled ?? true);
+  if (state.chromaAmount > 0.01 && chromaLayerOn) {
     drawChromaShift(ctx, w, h, state.chromaAmount);
   }
 
   // -- Particles --
+  const particlesLayerOn = preset.layerParticles ?? true;
   const particleMult = quality?.particleMultiplier ?? 1;
   const effectiveParticleCount = Math.round(preset.particleCount * particleMult);
-  if (effectiveParticleCount > 0) {
+  if (effectiveParticleCount > 0 && particlesLayerOn) {
     drawParticles(ctx, w, h, state, preset, hueBase, rms, peak, dtSec, effectiveParticleCount);
   }
 
   // -- Outer vignette --
-  const vigGrad = ctx.createRadialGradient(cx, cy, minDim * 0.3, cx, cy, minDim * 0.7);
-  vigGrad.addColorStop(0, 'transparent');
-  vigGrad.addColorStop(1, 'rgba(0, 0, 0, 0.5)');
-  ctx.fillStyle = vigGrad;
-  ctx.fillRect(0, 0, w, h);
+  if (preset.layerVignette ?? true) {
+    const vigGrad = ctx.createRadialGradient(cx, cy, minDim * 0.3, cx, cy, minDim * 0.7);
+    vigGrad.addColorStop(0, 'transparent');
+    vigGrad.addColorStop(1, 'rgba(0, 0, 0, 0.5)');
+    ctx.fillStyle = vigGrad;
+    ctx.fillRect(0, 0, w, h);
+  }
 }
 
 function drawStarburst(

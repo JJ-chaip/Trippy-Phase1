@@ -79,6 +79,32 @@ export interface VisualPreset {
 
   /** Inner glow radius as fraction of minDim. */
   readonly innerGlowRadius?: number;
+
+  // ─── Visual Layer Toggles ───────────────────────────────
+  // Each toggle independently enables/disables one visual effect.
+
+  /** Trail afterimage — ghostly persistence of previous frames. */
+  readonly layerTrails?: boolean;
+  /** Bloom glow — soft radial light pulses on beat. */
+  readonly layerBloom?: boolean;
+  /** Starburst rays — lines radiating from center on beat hits. */
+  readonly layerStarburst?: boolean;
+  /** Chromatic aberration — RGB colour-split shift on high energy. */
+  readonly layerChroma?: boolean;
+  /** Floating particles — drifting dots that react to audio energy. */
+  readonly layerParticles?: boolean;
+  /** Inner glow — pulsing light core at the centre. */
+  readonly layerInnerGlow?: boolean;
+  /** Frequency rings — waveform-distorted circles driven by audio bands. */
+  readonly layerRings?: boolean;
+  /** Ring fill — semi-transparent colour inside each ring. */
+  readonly layerFill?: boolean;
+  /** Mirror mode — reflected duplicate of each ring pattern. */
+  readonly layerMirror?: boolean;
+  /** Central pulse — energy-reactive core disc. */
+  readonly layerPulse?: boolean;
+  /** Outer vignette — dark edges framing the visual. */
+  readonly layerVignette?: boolean;
 }
 
 export const PRESET_COSMIC_BLOOM: VisualPreset = {
@@ -108,6 +134,17 @@ export const PRESET_COSMIC_BLOOM: VisualPreset = {
   beatPulseScale: 1.4,
   chromaShift: 0.3,
   innerGlowRadius: 0.15,
+  layerTrails: true,
+  layerBloom: true,
+  layerStarburst: false,
+  layerChroma: true,
+  layerParticles: true,
+  layerInnerGlow: true,
+  layerRings: true,
+  layerFill: true,
+  layerMirror: false,
+  layerPulse: true,
+  layerVignette: true,
 };
 
 export const PRESET_NEON_PULSE: VisualPreset = {
@@ -137,6 +174,17 @@ export const PRESET_NEON_PULSE: VisualPreset = {
   beatPulseScale: 1.6,
   chromaShift: 0.5,
   innerGlowRadius: 0.18,
+  layerTrails: true,
+  layerBloom: true,
+  layerStarburst: true,
+  layerChroma: true,
+  layerParticles: true,
+  layerInnerGlow: true,
+  layerRings: true,
+  layerFill: true,
+  layerMirror: true,
+  layerPulse: true,
+  layerVignette: true,
 };
 
 export const PRESET_DEEP_OCEAN: VisualPreset = {
@@ -166,6 +214,17 @@ export const PRESET_DEEP_OCEAN: VisualPreset = {
   beatPulseScale: 1.2,
   chromaShift: 0.1,
   innerGlowRadius: 0.12,
+  layerTrails: true,
+  layerBloom: true,
+  layerStarburst: false,
+  layerChroma: true,
+  layerParticles: true,
+  layerInnerGlow: true,
+  layerRings: true,
+  layerFill: true,
+  layerMirror: false,
+  layerPulse: true,
+  layerVignette: true,
 };
 
 export const PRESET_SOLAR_FLARE: VisualPreset = {
@@ -195,6 +254,17 @@ export const PRESET_SOLAR_FLARE: VisualPreset = {
   beatPulseScale: 2.0,
   chromaShift: 0.6,
   innerGlowRadius: 0.22,
+  layerTrails: true,
+  layerBloom: true,
+  layerStarburst: true,
+  layerChroma: true,
+  layerParticles: true,
+  layerInnerGlow: true,
+  layerRings: true,
+  layerFill: true,
+  layerMirror: false,
+  layerPulse: true,
+  layerVignette: true,
 };
 
 export const PRESET_AURORA: VisualPreset = {
@@ -224,6 +294,17 @@ export const PRESET_AURORA: VisualPreset = {
   beatPulseScale: 1.1,
   chromaShift: 0.2,
   innerGlowRadius: 0.1,
+  layerTrails: true,
+  layerBloom: true,
+  layerStarburst: false,
+  layerChroma: true,
+  layerParticles: true,
+  layerInnerGlow: true,
+  layerRings: true,
+  layerFill: true,
+  layerMirror: true,
+  layerPulse: true,
+  layerVignette: true,
 };
 
 export const PRESET_CYBERPUNK: VisualPreset = {
@@ -253,6 +334,17 @@ export const PRESET_CYBERPUNK: VisualPreset = {
   beatPulseScale: 2.2,
   chromaShift: 0.8,
   innerGlowRadius: 0.2,
+  layerTrails: true,
+  layerBloom: true,
+  layerStarburst: true,
+  layerChroma: true,
+  layerParticles: true,
+  layerInnerGlow: true,
+  layerRings: true,
+  layerFill: true,
+  layerMirror: true,
+  layerPulse: true,
+  layerVignette: true,
 };
 
 export const PRESET_VOID: VisualPreset = {
@@ -282,6 +374,17 @@ export const PRESET_VOID: VisualPreset = {
   beatPulseScale: 1.8,
   chromaShift: 0,
   innerGlowRadius: 0.08,
+  layerTrails: true,
+  layerBloom: true,
+  layerStarburst: false,
+  layerChroma: false,
+  layerParticles: true,
+  layerInnerGlow: true,
+  layerRings: true,
+  layerFill: true,
+  layerMirror: false,
+  layerPulse: true,
+  layerVignette: true,
 };
 
 /** All available presets. New presets are added here. */
