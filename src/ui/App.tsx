@@ -16,6 +16,16 @@ import {
   BEAT_DETECTOR_MODULE_ID,
 } from '../modules/beat-detector/index.js';
 import type { BeatDetectorOutput } from '../modules/beat-detector/types.js';
+import {
+  createRadialFieldModule,
+  RADIAL_FIELD_MODULE_ID,
+} from '../modules/radial-field/index.js';
+import type { RadialFieldDiagnostics, ParticleLayoutWeight } from '../modules/radial-field/types.js';
+import {
+  createCompositorModule,
+  COMPOSITOR_MODULE_ID,
+} from '../modules/compositor/index.js';
+import type { CompositorDiagnostics, LayerIntensity } from '../modules/compositor/types.js';
 import { createDemoSourceState, demoSourceTick } from '../audio/demo-source.js';
 import type { DemoSourceState } from '../audio/demo-source.js';
 import { createRendererState, renderFrame } from '../render/canvas-renderer.js';
@@ -51,6 +61,10 @@ const DEFAULT_LOOK_STATE: Record<string, number> = {
   'audio.gainCeilingLimit': 5.0,
   'beat.onsetThreshold': 0.35,
   'beat.minBeatIntervalMs': 200,
+  'field.fovealFrequencyBias': 0.5,
+  'field.stereoAsymmetryBal': 0,
+  'presentation.layerCompositionBias': 0.5,
+  'presentation.superficialAttnWeight': 0.6,
 };
 
 const QUALITY_TIERS: readonly QualityTier[] = ['low', 'medium', 'high', 'ultra'];
@@ -90,6 +104,8 @@ export function App(): React.JSX.Element {
   const [showLayers, setShowLayers] = useState(false);
   const [diag, setDiag] = useState<HgcDiagnostics | null>(null);
   const [beatInfo, setBeatInfo] = useState<BeatDetectorOutput | null>(null);
+  const [radialDiag, setRadialDiag] = useState<RadialFieldDiagnostics | null>(null);
+  const [compDiag, setCompDiag] = useState<CompositorDiagnostics | null>(null);
   const [activePresetId, setActivePresetId] = useState('');
   const [fps, setFps] = useState(0);
   const [qualityTier, setQualityTier] = useState<QualityTier>('high');
@@ -159,6 +175,8 @@ export function App(): React.JSX.Element {
     const registry = new ModuleRegistry();
     registry.register(createHgcModule());
     registry.register(createBeatDetectorModule());
+    registry.register(createRadialFieldModule());
+    registry.register(createCompositorModule());
     registry.init(DEFAULT_LOOK_STATE);
     registryRef.current = registry;
     demoRef.current = createDemoSourceState();
@@ -322,6 +340,18 @@ export function App(): React.JSX.Element {
         setBeatInfo(beat);
       }
 
+      const radialOutput = frame.outputs.get(RADIAL_FIELD_MODULE_ID);
+      const radialLayout = radialOutput?.['layout'] as ParticleLayoutWeight[] | undefined;
+      if (radialOutput) {
+        setRadialDiag(radialOutput['diagnostics'] as RadialFieldDiagnostics);
+      }
+
+      const compOutput = frame.outputs.get(COMPOSITOR_MODULE_ID);
+      const compLayers = compOutput?.['layerIntensity'] as LayerIntensity | undefined;
+      if (compOutput) {
+        setCompDiag(compOutput['diagnostics'] as CompositorDiagnostics);
+      }
+
       // Preset store tick (transitions, auto-cycle)
       presetStoreTick(pStore, dt);
 
@@ -343,7 +373,7 @@ export function App(): React.JSX.Element {
       if (ctx) {
         const w = window.innerWidth;
         const h = window.innerHeight;
-        renderFrame(ctx, w, h, drive, effectivePreset, renderer, dt, beat, qConfig);
+        renderFrame(ctx, w, h, drive, effectivePreset, renderer, dt, beat, qConfig, compLayers, radialLayout);
       }
 
       // FPS
@@ -608,6 +638,21 @@ Gain:  ${diag.ws.toFixed(3)}  RMS: ${diag.currentRms.toFixed(4)}
             <pre style={{ fontSize: 10, lineHeight: 1.4, color: '#0a0', margin: '4px 0 0' }}>
 {`Beat: ${beatInfo.beatThisFrame ? 'HIT' : '---'}  BPM: ${beatInfo.estimatedBpm > 0 ? beatInfo.estimatedBpm.toFixed(0) : '---'}
 Bar: ${beatInfo.barPosition + 1}/4  Kick: ${beatInfo.kickEnergy.toFixed(3)}`}
+            </pre>
+          )}
+
+          {/* Compositor diagnostics (§F.21) */}
+          {compDiag && (
+            <pre style={{ fontSize: 10, lineHeight: 1.4, color: '#0a0', margin: '4px 0 0' }}>
+{`Layers: D:${compDiag.layerIntensity.deep.toFixed(2)} M:${compDiag.layerIntensity.mid.toFixed(2)} S:${compDiag.layerIntensity.superficial.toFixed(2)}${compDiag.superficialClamped ? ' CLAMP' : ''}
+Bias: ${compDiag.compositionBias.toFixed(2)}  SupW: ${compDiag.superficialWeight.toFixed(2)}`}
+            </pre>
+          )}
+
+          {/* Radial field diagnostics (§F.20) */}
+          {radialDiag && (
+            <pre style={{ fontSize: 10, lineHeight: 1.4, color: '#0a0', margin: '4px 0 0' }}>
+{`Foveal: ${radialDiag.fovealBias.toFixed(2)}  Stereo: ${radialDiag.stereoAsymmetry.toFixed(2)}  Parts: ${radialDiag.particleCount}`}
             </pre>
           )}
 
