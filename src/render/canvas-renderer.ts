@@ -16,6 +16,8 @@ import type { CanonicalAudioDrive } from '../core/types/audio-drive.js';
 import type { VisualPreset } from './presets.js';
 import type { QualityConfig } from './quality-ladder.js';
 import type { BeatDetectorOutput } from '../modules/beat-detector/types.js';
+import type { LayerIntensity } from '../modules/compositor/types.js';
+import type { ParticleLayoutWeight } from '../modules/radial-field/types.js';
 import { clamp } from '../utils/math.js';
 
 export interface Particle {
@@ -41,6 +43,8 @@ export interface RendererState {
   starburstAlpha: number;
   /** Chromatic shift amount (tracks energy). */
   chromaAmount: number;
+  /** Smoothed compositor layer intensities. */
+  layerIntensity: LayerIntensity;
 }
 
 export function createRendererState(): RendererState {
@@ -53,6 +57,7 @@ export function createRendererState(): RendererState {
     beatPulse: 0,
     starburstAlpha: 0,
     chromaAmount: 0,
+    layerIntensity: { deep: 0, mid: 0, superficial: 0 },
   };
 }
 
@@ -86,6 +91,8 @@ export function renderFrame(
   dtMs: number,
   beat?: BeatDetectorOutput,
   quality?: QualityConfig,
+  compositorLayers?: LayerIntensity,
+  radialLayout?: ParticleLayoutWeight[],
 ): void {
   const dtSec = dtMs / 1000;
   state.elapsedSec += dtSec;
@@ -124,6 +131,16 @@ export function renderFrame(
   const targetChroma = rms * (preset.chromaShift ?? 0);
   state.chromaAmount += (targetChroma - state.chromaAmount) * clamp(dtSec * 6, 0, 1);
 
+  // Compositor layer intensity smoothing
+  if (compositorLayers) {
+    const lf = clamp(dtSec * 8, 0, 1);
+    state.layerIntensity = {
+      deep: state.layerIntensity.deep + (compositorLayers.deep - state.layerIntensity.deep) * lf,
+      mid: state.layerIntensity.mid + (compositorLayers.mid - state.layerIntensity.mid) * lf,
+      superficial: state.layerIntensity.superficial + (compositorLayers.superficial - state.layerIntensity.superficial) * lf,
+    };
+  }
+
   const trailAlpha = preset.trailAlpha ?? 0;
   const trailsLayerOn = (preset.layerTrails ?? true) && (quality?.trailsEnabled ?? true);
   const useTrails = trailAlpha > 0 && trailsLayerOn;
@@ -144,20 +161,22 @@ export function renderFrame(
     ? (preset.baseHue + t * preset.hueRotateSpeed) % 360
     : preset.baseHue;
 
-  // -- Background radial gradient --
+  // -- Background radial gradient (Deep layer) --
+  const deepAlpha = compositorLayers ? 0.15 + state.layerIntensity.deep * 0.25 : 0.3;
   const bgGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, minDim * 0.6);
-  bgGrad.addColorStop(0, `hsla(${hueBase}, 60%, 8%, 0.3)`);
-  bgGrad.addColorStop(0.5, `hsla(${(hueBase + 40) % 360}, 40%, 4%, 0.15)`);
+  bgGrad.addColorStop(0, `hsla(${hueBase}, 60%, 8%, ${deepAlpha})`);
+  bgGrad.addColorStop(0.5, `hsla(${(hueBase + 40) % 360}, 40%, 4%, ${deepAlpha * 0.5})`);
   bgGrad.addColorStop(1, 'transparent');
   ctx.fillStyle = bgGrad;
   ctx.fillRect(0, 0, w, h);
 
-  // -- Inner glow --
+  // -- Inner glow (Deep layer modulated) --
   if (preset.layerInnerGlow ?? true) {
-    const innerR = minDim * (preset.innerGlowRadius ?? 0.15);
+    const deepMod = compositorLayers ? 0.6 + state.layerIntensity.deep * 0.4 : 1;
+    const innerR = minDim * (preset.innerGlowRadius ?? 0.15) * deepMod;
     const innerGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, innerR * (1 + state.beatPulse * 0.5));
-    innerGrad.addColorStop(0, `hsla(${hueBase}, 100%, 70%, ${0.15 + state.beatPulse * 0.3})`);
-    innerGrad.addColorStop(0.5, `hsla(${(hueBase + 30) % 360}, 80%, 40%, ${0.08 + state.beatPulse * 0.15})`);
+    innerGrad.addColorStop(0, `hsla(${hueBase}, 100%, 70%, ${(0.15 + state.beatPulse * 0.3) * deepMod})`);
+    innerGrad.addColorStop(0.5, `hsla(${(hueBase + 30) % 360}, 80%, 40%, ${(0.08 + state.beatPulse * 0.15) * deepMod})`);
     innerGrad.addColorStop(1, 'transparent');
     ctx.fillStyle = innerGrad;
     ctx.beginPath();
@@ -178,11 +197,12 @@ export function renderFrame(
     ctx.fill();
   }
 
-  // -- Starburst rays --
+  // -- Starburst rays (Superficial layer modulated) --
   const starburstRays = preset.starburstRays ?? 0;
   const starburstLayerOn = (preset.layerStarburst ?? true) && (quality?.starburstEnabled ?? true);
+  const supMod = compositorLayers ? state.layerIntensity.superficial : 1;
   if (starburstRays > 0 && state.starburstAlpha > 0.01 && starburstLayerOn) {
-    drawStarburst(ctx, cx, cy, minDim, hueBase, starburstRays, state.starburstAlpha, t);
+    drawStarburst(ctx, cx, cy, minDim, hueBase, starburstRays, state.starburstAlpha * supMod, t);
   }
 
   // -- Frequency rings --
@@ -291,7 +311,7 @@ export function renderFrame(
   const particleMult = quality?.particleMultiplier ?? 1;
   const effectiveParticleCount = Math.round(preset.particleCount * particleMult);
   if (effectiveParticleCount > 0 && particlesLayerOn) {
-    drawParticles(ctx, w, h, state, preset, hueBase, rms, peak, dtSec, effectiveParticleCount);
+    drawParticles(ctx, w, h, state, preset, hueBase, rms, peak, dtSec, effectiveParticleCount, radialLayout);
   }
 
   // -- Outer vignette --
@@ -399,9 +419,11 @@ function drawParticles(
   peak: number,
   dtSec: number,
   targetCount: number,
+  radialLayout?: ParticleLayoutWeight[],
 ): void {
   const cx = w / 2;
   const cy = h / 2;
+  const minDim = Math.min(w, h);
 
   while (state.particles.length < targetCount) {
     state.particles.push(initParticle(w, h, preset));
@@ -410,8 +432,20 @@ function drawParticles(
     state.particles.length = targetCount;
   }
 
-  for (const p of state.particles) {
+  for (let idx = 0; idx < state.particles.length; idx++) {
+    const p = state.particles[idx] as Particle;
     const energy = rms * 2;
+
+    // Radial field layout influence: attract particles toward their polar positions
+    if (radialLayout && idx < radialLayout.length) {
+      const layout = radialLayout[idx] as ParticleLayoutWeight;
+      const targetX = cx + layout.x * minDim * 0.45;
+      const targetY = cy + layout.y * minDim * 0.45;
+      const attractStrength = clamp(dtSec * 2, 0, 0.15);
+      p.x += (targetX - p.x) * attractStrength;
+      p.y += (targetY - p.y) * attractStrength;
+    }
+
     p.x += p.vx * dtSec * (1 + energy);
     p.y += p.vy * dtSec * (1 + energy);
     p.life -= dtSec;
